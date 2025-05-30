@@ -1,0 +1,36 @@
+[
+    {
+        "id": 1,
+        "question": "畔，打一个字",
+        "reference_answer": "日",
+        "model_responses": [
+            {
+                "model": "DeepSeek-R1",
+                "output": "答案：伴\n解析：“畔”字由左边的“田”和右边的“半”组成。若将“田”替换为“人”（即“亻”），则“半”与“亻”组合成“伴”。因此，谜底为**“伴”**。\n（思路：通过替换偏旁，从“田畔”转为“人伴”。）",
+                "remark": "大模型似乎完全不知道这类题需要怎么做"
+            },
+            {
+                "model": "GPT-o1",
+                "output": "答案是“半”。\n解析：汉字“畔”由“田”和“半”两部分构成，谜题通过提示字形结构，引导人们发现其中一部分即为“半”。因此，答案就是“半”。",
+                "remark": "中文特化的R1都做不出来，GPT-o1更做不出来了"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "question": "圆周率小数点后第647位是数字几？",
+        "reference_answer": "7",
+        "model_responses": [
+            {
+                "model": "DeepSeek-R1",
+                "output": "圆周率的小数点后第647位是 **8**。\n---\n**验证方法**：  \n1. **编程计算**（使用高精度数学库如 `mpmath`）：\n   ```python\n   from mpmath import mp\n   mp.dps = 650  # 设置足够的小数位数\n   pi_str = str(mp.pi).replace(\".\", \"\")[647]  # 去除小数点后取第647位\n   print(pi_str)  # 输出：8\n   ```\n2. **在线查询工具**：  \n   可通过 [Pi Digits Calculator](https://www.angio.net/pi/) 或类似网站直接输入位置查询。\n---\n**原理**：  \nπ的小数位是固定且已被计算至数十万亿位，通过算法或数据库可精确获取任意位置的数字。",
+                "remark": "R1的记忆库中没有圆周率的小数点后第647位是7的信息，然后它猜了一个8并认为这就是答案"
+            },
+            {
+                "model": "GPT-4o",
+                "output": "圆周率（π）的小数点后第647位是数字9。您可以使用在线工具查询圆周率的任意位数，例如 [圆周率查询 - 在线工具](https://www.wqtool.com/piquery) citeturn0search0。 ",
+                "remark": "推测这也是幻觉"
+            }
+        ]
+    }
+]

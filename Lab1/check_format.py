@@ -1,8 +1,8 @@
 import json
 
 # Please change the file path to your own file path
-file_path = "path/to/your/file.json"
-new_file_path = "new/path/to/your/file.json"
+file_path = "Lab1/2300012860_刘智琦.json"
+new_file_path = "Lab1/2300012860_刘智琦_new.json"
 # If you pass all the assertion checks, the new file will be saved to the new_file_path. you should upload the new file to the course.pku.edu.cn
 
 assert file_path != new_file_path, "Please change the new_file_path to a new file path to avoid overwriting the original file."
