@@ -1,0 +1,36 @@
+[
+    {
+        "id": 1,
+        "question": "Your question here",
+        "reference_answer": "Your reference answer here",
+        "model_responses": [
+            {
+                "model": "DeepSeek-R1",
+                "output": "The model's response",
+                "remark": "Explanation of why the response is incorrect"
+            },
+            {
+                "model": "GPT-4o",
+                "output": "The model's response",
+                "remark": "Explanation of why the response is incorrect"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "question": "Your second question here",
+        "reference_answer": "Your reference answer here",
+        "model_responses": [
+            {
+                "model": "DeepSeek-R1",
+                "output": "The model's response",
+                "remark": "Explanation of why the response is incorrect"
+            },
+            {
+                "model": "GPT-4o",
+                "output": "The model's response",
+                "remark": "Explanation of why the response is incorrect"
+            }
+        ]
+    }
+]
