@@ -6,6 +6,7 @@
 
 import os
 import json
+import torch
 from transformers import AutoTokenizer
 from tokenizers import Tokenizer
 from collections import Counter
@@ -40,6 +41,10 @@ def load_bert_tokenizer():
         AutoTokenizer: BERT分词器对象
     """
     try:
+        # 检查是否有可用的GPU，并设置device
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"使用的设备: {device}")
+        
         bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         print(f"成功加载BERT分词器")
         print(f"BERT原始词汇表大小: {len(bert_tokenizer.vocab)}")

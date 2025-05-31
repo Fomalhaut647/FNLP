@@ -1,0 +1,471 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{fullpage}
+\usepackage[top=2cm, bottom=4.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,amscd}
+\usepackage{lastpage}
+\usepackage{enumerate}
+\usepackage{fancyhdr}
+\usepackage{mathrsfs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{dot2texi}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage[pdf]{graphviz}
+\usepackage{verbatimbox}
+\usepackage[T1]{fontenc} % 推荐使用 T1 字体编码以获得更好的断字效果
+\usepackage{minted}
+\setminted[python]{
+    breaklines=true,
+    breakanywhere=true
+}
+\usetikzlibrary{automata,shapes,arrows} 
+
+\hypersetup{%
+  colorlinks=true,
+  linkcolor=blue,
+  linkbordercolor={0 0 1}
+}
+ 
+\renewcommand\lstlistingname{Algorithm}
+\renewcommand\lstlistlistingname{Algorithms}
+\def\lstlistingautorefname{Alg.}
+
+\lstdefinestyle{Matlab}{
+    language        = matlab,
+    frame           = lines, 
+    basicstyle      = \footnotesize,
+    keywordstyle    = \color{blue},
+    stringstyle     = \color{green},
+    commentstyle    = \color{red}\ttfamily
+}
+\setlength{\parindent}{0.0in}
+\setlength{\parskip}{0.05in}
+
+% Edit these as appropriate
+\newcommand\course{自然语言处理基础}
+\newcommand\hwnumber{3}                  % <-- homework number
+\newcommand\name{刘智琦}                 % <-- Name
+\newcommand\ID{2300012860}           % <-- ID
+
+\pagestyle{fancyplain}
+\headheight 35pt
+\lhead{\name\\\ID}                 
+\chead{\textbf{\Large Homework \hwnumber}}
+\rhead{\course \\ \today}
+\lfoot{}
+\cfoot{}
+\rfoot{\small\thepage}
+\headsep 1.5em
+
+
+
+
+
+\begin{document}
+
+\section{Implement the WordPiece algorithm}
+\subsection*{1.1}
+WordPiece 是一种子词（subword）分词算法，常用于自然语言处理任务中，特别是像 BERT 这样的 Transformer 模型中。它的核心思想是通过迭代合并高频出现的字符对来构建一个词汇表，从而在词汇量和未登录词（Out-of-Vocabulary, OOV）问题之间取得平衡。
+
+\vspace{\baselineskip} % Optional: add some vertical space before the "section"
+\noindent\textbf{WordPiece 算法原理}
+\begin{enumerate}
+    \item \textbf{初始化词汇表}: 算法开始时，词汇表包含训练语料库中所有的单个字符。例如，对于单词 ``hugging face''，初始词汇表可能包含 \texttt{\{'h', 'u', 'g', 'i', 'n', ' ', 'f', 'a', 'c', 'e'\}}。
+
+    \item \textbf{迭代合并}: 算法会迭代地从当前词汇表中选择一对单元（初始时是字符，后续可能是已合并的子词），如果将这对单元合并成一个新的单元能够最大程度地增加训练数据的似然（likelihood）。
+    \begin{itemize}
+        \item \textbf{打分机制}: 选择哪一对进行合并，通常基于它们组合后在语料库中出现的“价值”。一个常用的打分公式是：
+        $$ \text{score}(\text{unit}_1, \text{unit}_2) = \frac{\text{frequency}(\text{unit}_1\text{unit}_2)}{\text{frequency}(\text{unit}_1) \times \text{frequency}(\text{unit}_2)} $$
+        这个分数衡量了两个单元一起出现的频率相对于它们各自独立出现的频率。分数越高，说明这两个单元结合得越紧密，合并的价值越大。
+        \item \textbf{合并}: 在每一轮迭代中，算法会选择得分最高的单元对进行合并，并将这个新的合并单元加入到词汇表中。例如，如果 ``h'' 和 ``u'' 经常一起出现，并且得分最高，它们就会被合并成 ``hu''，词汇表更新。
+    \end{itemize}
+
+    \item \textbf{构建最终词汇表}: 这个迭代合并的过程会持续进行，直到词汇表达到预设的大小，或者没有单元对的得分超过某个阈值。
+
+    \item \textbf{分词过程}:
+    \begin{itemize}
+        \item 对于一个新的单词，WordPiece 会尝试从词汇表中最长的子词开始匹配。它会贪婪地将单词分割成已存在于词汇表中的最长的前缀。
+        \item 如果单词的某个部分无法在词汇表中找到，它会被分解成更小的已知子词，最坏的情况下会分解成单个字符（因为所有单个字符都在初始词汇表中）。
+        \item 为了区分单词的开头和中间部分，WordPiece 通常会在单词的非首个子词前加上特殊标记，例如 ``\#\#''。比如，单词 ``unhappiness'' 可能会被分解为 \texttt{["un", "\#\#happ", "\#\#iness"]}。
+    \end{itemize}
+\end{enumerate}
+
+\vspace{\baselineskip} % Optional: add some vertical space before the next "section"
+\noindent\textbf{简单示例}
+
+\noindent 假设我们的训练数据中有很多类似 ``hugging'', ``huge'', ``hug'' 的词。
+\begin{enumerate}
+    \item \textbf{初始词汇表}: \texttt{\{'h', 'u', 'g', 'i', 'n', 'e', ...\}}
+
+    \item \textbf{迭代1}:
+    \begin{itemize}
+        \item 假设计算后，(``h'', ``u'') 的得分最高。
+        \item 合并 ``h'' 和 ``u'' 得到 ``hu''。
+        \item 词汇表更新: \texttt{\{'h', 'u', 'g', 'i', 'n', 'e', ..., ``hu''\}}
+    \end{itemize}
+
+    \item \textbf{迭代2}:
+    \begin{itemize}
+        \item 现在考虑新的单元对，例如 (``hu'', ``g'')。假设 (``hu'', ``g'') 的得分很高。
+        \item 合并 ``hu'' 和 ``g'' 得到 ``hug''。
+        \item 词汇表更新: \texttt{\{'h', 'u', 'g', 'i', 'n', 'e', ..., ``hu'', ``hug''\}}
+    \end{itemize}
+
+    \item \textbf{...以此类推}，直到达到词汇表大小限制。
+\end{enumerate}
+
+\noindent\textbf{分词示例}:
+
+\noindent 假设最终词汇表包含 \texttt{\{"h", "u", "g", "\#\#g", "\#\#ing", "hug", "face", ...\}}
+\begin{itemize}
+    \item \texttt{"hugging"} $\rightarrow$ \texttt{["hug", "\#\#g", "\#\#ing"]} (假设 ``hug'' 是最长匹配前缀，然后 ``\#\#g'' 和 ``\#\#ing'' 继续匹配)
+    \item \texttt{"face"} $\rightarrow$ \texttt{["face"]} (如果 ``face'' 作为一个整体在词汇表中)
+\end{itemize}
+
+WordPiece 的目标是找到一种既能有效表示常见词，又能通过组合子词来表示稀有词或未登录词的分词方式，从而提高模型的泛化能力。
+
+
+
+
+
+\subsection*{1.3}
+\begin{verbatim}
+Tokenization result: ['n', '##o', '##u', '##s', 'e', '##tud', '##i', '##o',
+'##n', '##s', 'a', 'l', 'univ', '##e', '##rsi', '##t', '##e', 'd', '##e',
+'p', '##e', '##ki', '##n']
+\end{verbatim}
+
+
+
+\subsection*{1.4}
+\subsubsection*{(1)}
+beijing has beautiful gardens
+
+
+
+\subsubsection*{(2)}
+Llama 的分词器（通常是 SentencePiece，采用字节对编码 BPE 的变种）\textbf{不需要 `[UNK]` (unknown) 标记}，主要是因为它能够将任何文本字符串分解为已知的子词单元，最终甚至可以分解为单个字节。
+
+以下是关键原因：
+
+\begin{enumerate}
+    \item \textbf{字节级处理 (Byte-level Fallback)}：
+    Llama 使用的 SentencePiece 分词器通常会采用一种策略，即如果一个词或字符序列不在其预定义的词汇表中，它可以将其分解为更小的、已知的子词单元。作为最终的保障，它可以将任何未见过的字符或字节序列表示为其UTF-8字节的序列。因为词汇表本身就包含了所有单个字节，所以理论上不存在无法表示的字符。
+
+    \item \textbf{子词单元 (Subword Units)}：
+    BPE 算法通过迭代地合并最频繁出现的字节对来构建词汇表。这意味着常见的词会被表示为单个标记，而不常见的词会被分解成多个子词标记。即使遇到一个全新的、从未见过的词，该模型也可以通过将其分解成已知的子词或最终的字节来表示它，而不是简单地将其标记为 `[UNK]`。
+\end{enumerate}
+
+简而言之，Llama 的分词机制通过确保总能将输入文本分解为词汇表中的有效序列（即使是单字节序列），从而避免了对 `[UNK]` 标记的需求。这使得模型能够处理任意文本，包括拼写错误、罕见词、新词，甚至是不同语言的字符，而不会丢失信息。
+
+
+
+
+
+
+
+\section{Expand BERT’s tokenizer with WordPiece}
+\subsection{问题1：WordPiece分词器训练}
+
+\subsubsection{训练方法和参数}
+
+本实验使用Hugging Face的tokenizers库在PubMed生物医学语料库上训练WordPiece分词器，具体参数配置如下：
+
+\begin{itemize}
+    \item \textbf{算法}：WordPiece分词算法
+    \item \textbf{语料库}：PubMed生物医学语料库（pubmed\_sampled\_corpus.jsonline，2.8GB）
+    \item \textbf{词汇表大小}：30,000
+    \item \textbf{最小频率}：2（词元必须出现至少2次才会被包含）
+    \item \textbf{特殊标记}：\texttt{[UNK]}, \texttt{[CLS]}, \texttt{[SEP]}, \texttt{[PAD]}, \texttt{[MASK]}
+    \item \textbf{字母表限制}：1000字符
+    \item \textbf{标准化器}：BertNormalizer（与BERT相同的标准化方式）
+    \item \textbf{预分词器}：Whitespace（按空格分词）
+\end{itemize}
+
+\subsubsection{训练代码示例}
+
+\begin{verbatim}
+trainer = WordPieceTrainer(
+    vocab_size=30000,
+    min_frequency=2,
+    special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],
+    limit_alphabet=1000,
+    initial_alphabet=[],
+    show_progress=True
+)
+\end{verbatim}
+
+\textbf{最终词表大小}：30,000个词元（与设定目标一致）
+
+\subsection{问题2：新词元选择策略}
+
+\subsubsection{选择策略}
+
+从训练好的WordPiece分词器中选择5000个领域特定词元的策略包括：
+
+\begin{enumerate}
+    \item \textbf{识别新词元}：从训练好的WordPiece分词器（30,000词元）中找出不在原始BERT词汇表（30,522词元）中的词元
+    \item \textbf{生物医学术语优先}：使用模式匹配识别生物医学相关词元
+    \item \textbf{质量过滤}：排除长度小于3的词元和纯子词标记
+    \item \textbf{分层选择}：优先选择生物医学词元，然后补充其他高质量词元
+\end{enumerate}
+
+\subsubsection{生物医学识别模式}
+
+生物医学术语识别使用以下模式匹配规则：
+
+\begin{itemize}
+    \item \textbf{后缀模式}：\texttt{-osis}, \texttt{-itis}, \texttt{-emia}, \texttt{-pathy}, \texttt{-ology}, \texttt{-ectomy}等
+    \item \textbf{前缀模式}：\texttt{anti-}, \texttt{hyper-}, \texttt{hypo-}, \texttt{micro-}, \texttt{macro-}等  
+    \item \textbf{关键词}：\texttt{protein}, \texttt{gene}, \texttt{cell}, \texttt{clinical}, \texttt{therapy}等
+\end{itemize}
+
+\subsubsection{新词元样本（50个）}
+
+从添加的5000个新词元中随机抽取的50个样本如下：
+
+\begin{multicols}{5}
+\begin{enumerate}
+    \item micelles
+    \item Cancers
+    \item transmembrane
+    \item antidepressants
+    \item antioxidant
+    \item cytomegalovirus
+    \item postoperative
+    \item ligase
+    \item Transplant
+    \item hypothermia
+    \item Pathogenesis
+    \item neuropath
+    \item Gastroenter
+    \item retinopathy
+    \item Neuroscience
+    \item sarcoma
+    \item cardiopulmonary
+    \item cytotox
+    \item microfluidic
+    \item subcutaneous
+    \item Clostridium
+    \item nucleotide
+    \item stenosis
+    \item Microorganisms
+    \item Microglia
+    \item glycoprotein
+    \item doxycycline
+    \item psychosis
+    \item antipsychotic
+    \item immunofluorescence
+    \item Cytokine
+    \item transporters
+    \item Hematology
+    \item Biochemical
+    \item Gynecology
+    \item macromolecules
+    \item metastases
+    \item cytosolic
+    \item Cholesterol
+    \item amylase
+    \item Caspase
+    \item microbiology
+    \item miRNA
+    \item neuroprotective
+    \item immunoreactivity
+    \item osteoblasts
+    \item genomics
+    \item hyperplasia
+    \item Pharmacother
+    \item lymphomas
+\end{enumerate}
+\end{multicols}
+
+\subsubsection{观察到的特征和模式}
+
+分析这50个样本词元，观察到以下特征和模式：
+
+\begin{itemize}
+    \item \textbf{医学专业术语}：大量完整的医学术语如\texttt{cytomegalovirus}, \texttt{immunofluorescence}
+    \item \textbf{学科分支}：包含各医学分支如\texttt{Hematology}（血液学）、\texttt{Gynecology}（妇科学）、\texttt{Neuroscience}（神经科学）
+    \item \textbf{生物分子}：包含重要生物分子如\texttt{miRNA}, \texttt{Cytokine}, \texttt{Caspase}, \texttt{nucleotide}
+    \item \textbf{病理术语}：疾病相关词汇如\texttt{sarcoma}, \texttt{metastases}, \texttt{stenosis}, \texttt{psychosis}
+    \item \textbf{药理学词汇}：药物和治疗相关如\texttt{doxycycline}, \texttt{antidepressants}, \texttt{Pharmacother}
+    \item \textbf{细胞生物学}：细胞相关术语如\texttt{cytosolic}, \texttt{transmembrane}, \texttt{subcutaneous}
+\end{itemize}
+
+\subsection{问题3：HoC数据集分词对比}
+
+\subsubsection{分词对比示例}
+
+从HoC数据集中采样三个句子，对比原始BERT和扩展BERT分词器的表现：
+
+\textbf{示例1：}
+\begin{quote}
+\textit{原文：} However, we found that exposure to adriamycin resulted in an overrepresentation of cytogenetic changes involving telomeres, showing an altered telomere state induced by adriamycin is probably a causal factor leading to the senescence phenotype.
+\end{quote}
+
+\begin{itemize}
+    \item \textbf{原始BERT}（56 tokens）：[\texttt{'however', ',', 'we', 'found', 'that', 'exposure', 'to', 'ad', '\#\#riam', '\#\#y', '\#\#cin', ..., 'ph', '\#\#eno', '\#\#type', '.'}]
+    \item \textbf{扩展BERT}（48 tokens）：[\texttt{'however', ',', 'we', 'found', 'that', 'exposure', 'to', 'ad', '\#\#riam', '\#\#y', '\#\#cin', ..., 'senescence', 'phenotype', '.'}]
+    \item \textbf{改进}：减少了8个token（14.3\%）
+\end{itemize}
+
+\textbf{示例2：}
+\begin{quote}
+\textit{原文：} MAIN METHODS Twenty-eight rats were divided into four groups as control (group 1; no treatment; n=7), EGCG (group 2; n=7), cisplatin (group 3; n=7) or cisplatin and EGCG (group 4; n=7).
+\end{quote}
+
+\begin{itemize}
+    \item \textbf{原始BERT}（65 tokens）：包含\texttt{'cis', '\#\#pl', '\#\#atin'}等子词分割
+    \item \textbf{扩展BERT}（63 tokens）：将\texttt{cisplatin}识别为完整词元
+    \item \textbf{改进}：减少了2个token（3.1\%）
+\end{itemize}
+
+\textbf{示例3：}
+\begin{quote}
+\textit{原文：} These results were associated with over-expression of oxysterol binding protein homologue and liver X receptor (LXR) by Pterostilbene also caused a simultaneous increase in the expression autophagic marker proteins beclin 1 and LC3 II.
+\end{quote}
+
+\begin{itemize}
+    \item \textbf{原始BERT}（82 tokens）：包含\texttt{'auto', '\#\#pha', '\#\#gic'}和\texttt{'micro', '\#\#tub', '\#\#ule'}等分割
+    \item \textbf{扩展BERT}（75 tokens）：识别\texttt{autophagic}和\texttt{microtubule}为完整词元
+    \item \textbf{改进}：减少了7个token（8.5\%）
+\end{itemize}
+
+\subsubsection{分词结果差异分析}
+
+两个分词器的主要差异表现在：
+
+\begin{enumerate}
+    \item \textbf{完整术语保持}：扩展分词器能保持\texttt{telomeres}, \texttt{telomere}, \texttt{senescence}, \texttt{phenotype}, \texttt{cisplatin}等医学术语的完整性
+    \item \textbf{减少子词分割}：原始BERT将复杂医学术语分割成多个子词，扩展BERT能识别完整词汇
+    \item \textbf{语义连贯性提升}：减少了不必要的子词分割，提高了语义表达的连贯性
+\end{enumerate}
+
+\subsubsection{HoC训练集平均长度对比}
+
+对HoC训练集的1000个样本进行分词长度统计，结果如下：
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{分词器} & \textbf{平均token数} & \textbf{改进幅度} & \textbf{改进率} \\
+\hline
+原始BERT & 67.13 & - & - \\
+扩展BERT & 61.65 & -5.48 & 8.16\% \\
+\hline
+\end{tabular}
+\caption{HoC数据集分词长度对比}
+\end{table}
+
+\textbf{改进覆盖率统计：}
+\begin{itemize}
+    \item 有改进的文本：847个（84.7\%）
+    \item 无变化的文本：62个（6.2\%）
+    \item 变差的文本：91个（9.1\%）
+    \item 平均改进幅度：6.69个token
+    \item 最大改进幅度：40个token
+\end{itemize}
+
+\subsection{问题4：新增参数数量和初始化方法}
+
+\subsubsection{新增参数统计}
+
+通过扩展词汇表引入的新参数数量如下：
+
+\begin{itemize}
+    \item \textbf{词汇表扩展}：从30,522增加到35,522（新增5,000个词元）
+    \item \textbf{嵌入维度}：768维
+    \item \textbf{新增参数}：$5,000 \times 768 = 3,840,000$个新参数
+\end{itemize}
+
+\subsubsection{参数初始化方法}
+
+新引入的参数使用统计初始化方法：
+
+\begin{enumerate}
+    \item \textbf{统计特性计算}：计算原始BERT嵌入矩阵（30,522个词元）的均值和标准差
+    \begin{itemize}
+        \item 初始化均值：-0.028025
+        \item 初始化标准差：0.037898
+    \end{itemize}
+    \item \textbf{正态分布采样}：为每个新词元生成768维的嵌入向量，从正态分布$\mathcal{N}(\mu, \sigma^2)$中采样
+    \item \textbf{分布一致性}：确保新词元的嵌入分布与原始词元保持一致
+\end{enumerate}
+
+\textbf{初始化代码逻辑：}
+\begin{verbatim}
+# 计算原始嵌入的统计特性
+original_mean = original_embeddings.mean(dim=0)  # 768维均值向量
+original_std = original_embeddings.std(dim=0)    # 768维标准差向量
+
+# 为5000个新词元生成嵌入
+new_token_embeddings = torch.normal(
+    mean=original_mean.unsqueeze(0).expand(5000, -1),
+    std=original_std.unsqueeze(0).expand(5000, -1)
+)
+\end{verbatim}
+
+\subsection{问题5：扩展BERT模型性能分析}
+
+\subsubsection{模型验证结果}
+
+对扩展后的BERT模型进行了基础功能验证：
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{模型} & \textbf{词汇表大小} & \textbf{参数数量} & \textbf{状态} \\
+\hline
+原始BERT & 30,522 & 109,489,930 & ✓ 正常 \\
+扩展BERT & 35,522 & 113,329,930 & ✓ 正常 \\
+\hline
+\textbf{增加} & \textbf{5,000} & \textbf{3,840,000} & \\
+\hline
+\end{tabular}
+\caption{模型参数对比}
+\end{table}
+
+\subsubsection{性能分析}
+
+\textbf{验证结果：}
+\begin{itemize}
+    \item ✓ 扩展BERT模型成功加载并运行
+    \item ✓ 模型能正常处理HoC数据集，输入输出形状正确
+    \item ✓ 前向传播测试通过
+    \item ✓ 在HoC数据集上平均减少8.16\%的token数量
+\end{itemize}
+
+\textbf{预期性能提升因素：}
+\begin{enumerate}
+    \item \textbf{分词效率提升}：平均减少8.16\%的token数量，提高计算效率
+    \item \textbf{语义完整性}：更好地保持生物医学术语的完整性
+    \item \textbf{领域适应性}：5000个生物医学词元提高了模型对医学文本的理解能力
+\end{enumerate}
+
+\textbf{潜在性能制约因素：}
+\begin{enumerate}
+    \item \textbf{新参数训练不足}：3,840,000个新参数仅用统计方法初始化，需要充分训练才能发挥作用
+    \item \textbf{训练数据不足}：新词元需要在下游任务中见到足够的训练样本
+    \item \textbf{参数不平衡}：新增参数与原有参数之间可能存在训练不平衡
+    \item \textbf{过拟合风险}：增加的参数可能在小数据集上导致过拟合
+\end{enumerate}
+
+\textbf{改进策略建议：}
+\begin{itemize}
+    \item 在大规模生物医学语料上继续预训练
+    \item 采用渐进式训练：先冻结原有参数，只训练新参数，再联合训练
+    \item 使用正则化技术（dropout、权重衰减）防止过拟合
+    \item 通过数据增强增加训练数据量
+\end{itemize}
+
+\subsubsection{结论}
+
+扩展后的BERT模型在分词效率和术语完整性方面表现出明显优势，理论上经过适当训练后应该在生物医学文本分类任务上表现更好。然而，最终的分类性能需要通过完整的训练和评估来验证。新增的3,840,000个参数为模型提供了更强的表达能力，但需要充分的训练才能发挥其潜力。 
+
+\end{document}

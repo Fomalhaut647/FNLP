@@ -6,6 +6,7 @@
 
 from transformers import AutoTokenizer
 import os
+import torch
 
 def load_tokenizers():
     """
@@ -15,6 +16,10 @@ def load_tokenizers():
         tuple: (原始BERT分词器, 扩展后的分词器)
     """
     print("正在加载分词器...")
+    
+    # 检查是否有可用的GPU，并设置device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"使用的设备: {device}")
     
     # 加载原始BERT分词器
     try:

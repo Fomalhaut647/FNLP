@@ -42,8 +42,10 @@ class HoCClassifier(nn.Module):
         """
         super(HoCClassifier, self).__init__()
         
-        # 加载BERT模型
-        self.bert = BertModel.from_pretrained(bert_model_path)
+        # 加载BERT模型并移动到设备
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"使用的设备: {device}")
+        self.bert = BertModel.from_pretrained(bert_model_path).to(device)
         
         # 分类头
         hidden_size = self.bert.config.hidden_size
@@ -249,18 +251,17 @@ def train_model(model, train_dataset, val_dataset, output_dir='hoc_classifier_ou
     print(f"  批次大小: {batch_size}")
     print(f"  学习率: {learning_rate}")
     
-    # 设置设备
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"  使用设备: {device}")
+    # 定义优化器和学习率调度器
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     
+    # 检查是否有可用的GPU，并设置device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     
     # 数据加载器
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     
-    # 优化器和学习率调度器
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     total_steps = len(train_loader) * num_epochs
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
@@ -419,7 +420,9 @@ def test_model(model, test_dataset, tokenizer, output_dir='hoc_classifier_output
     print("模型测试与评估")
     print("="*80)
     
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # 加载模型
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = HoCClassifier(model_path, num_labels=num_labels)
     model.to(device)
     model.eval()
     

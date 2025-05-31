@@ -31,8 +31,12 @@ def resize_bert_embeddings(model_name='bert-base-uncased',
     # 1. 加载原始BERT模型和扩展后的分词器
     print("\n【步骤1】加载模型和分词器")
     
+    # 检查是否有可用的GPU，并设置device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"使用的设备: {device}")
+    
     print(f"加载原始BERT模型: {model_name}")
-    original_model = BertModel.from_pretrained(model_name)
+    original_model = BertModel.from_pretrained(model_name).to(device)
     original_config = original_model.config
     
     print(f"加载扩展后的分词器: {extended_tokenizer_path}")
@@ -58,7 +62,7 @@ def resize_bert_embeddings(model_name='bert-base-uncased',
     
     # 创建新模型
     print("创建新的BERT模型...")
-    new_model = BertModel(new_config)
+    new_model = BertModel(new_config).to(device)
     
     # 3. 复制原始权重
     print("\n【步骤3】复制原始模型权重")
@@ -204,7 +208,8 @@ def test_extended_model(model_path='extended_bert_model'):
     print("="*80)
     
     # 加载模型和分词器
-    model = BertModel.from_pretrained(model_path)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = BertModel.from_pretrained(model_path).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     
     print(f"加载模型: {model_path}")
