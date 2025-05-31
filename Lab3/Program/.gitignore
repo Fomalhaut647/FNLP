@@ -1,0 +1,6 @@
+pubmed_sampled_corpus.jsonline
+
+extended_bert_model/
+extended_bert_output/
+
+__pycache__/
