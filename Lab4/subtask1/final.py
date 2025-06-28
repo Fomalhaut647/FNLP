@@ -246,9 +246,9 @@ def build_prompt(sentence: str, test_item_words: Dict, relevant_rule: Optional[D
     return prompt
 
 class Args(Tap):
-    grammar_book_file: Path = Path('../../subtask2/data/grammar_book.json')  # Need to download from Kaggle
-    test_data_file: Path = Path('../../subtask2/data/test_data.json')
-    output_dir: Path = Path('outputs/qwenlatest')
+    grammar_book_file: Path = Path('./data/grammar_book.json')
+    test_data_file: Path = Path('./data/test_data.json')
+    output_dir: Path = Path('./outputs')
 
     use_retrieval: bool = True
     use_few_shot: bool = True

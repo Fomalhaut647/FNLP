@@ -174,3 +174,6 @@ pyrightconfig.json
 test.py
 
 *.zip
+
+test_data_results_RAG_hybrid_alpha0.5.json
+api_pred_za2zh_parallel_5_with_grammar.jsonl

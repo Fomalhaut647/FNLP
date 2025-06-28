@@ -1,5 +1,5 @@
 # FNLP Assignment 4 Project 1 Report
-
+> 具体的使用方法在 `subtask*/README.md` 中
 
 ## Sub-task 1
 在仅提供一本壮语语法书条件下，将指定的简单壮语句子准确地翻译成中文。

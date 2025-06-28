@@ -10,6 +10,5 @@ export API_KEY="sk-xxxxxxxxxxxxxxxxxxxx"
 
 ### 运行程序
 ```zsh
-cd baselines
-python final.py
+python src/main.py
 ```
