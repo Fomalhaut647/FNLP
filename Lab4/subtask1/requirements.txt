@@ -1,0 +1,15 @@
+langchain==0.0.245
+chromadb
+tiktoken
+nlpretext
+transformers
+sentence-transformers
+evaluate
+requests
+pandas
+numpy
+scikit-learn
+rank_bm25
+sentence-transformers
+tqdm
+typed-argument-parser
