@@ -23,7 +23,7 @@ if __name__ == '__main__':
         chrf = CHRF(word_order=0, lowercase=True)
         scarebleu = BLEU(lowercase=True)
     
-    # load data
+    # Load data
     output = []
     with open(args.output_path, "r") as f:
         for line in f:
@@ -36,8 +36,8 @@ if __name__ == '__main__':
     preds = []
     for item in output:
         if args.lang == 'za':
-            item['gold'] = item['gold'].replace("’", "'").replace("‘", "'")
-            item['pred'] = item['pred'].replace("’", "'").replace("‘", "'")
+            item['gold'] = item['gold'].replace("'", "'").replace("'", "'")
+            item['pred'] = item['pred'].replace("'", "'").replace("'", "'")
         refs.append(item['gold'])
         preds.append(item['pred'])
 
@@ -59,8 +59,8 @@ if __name__ == '__main__':
             for i, item in enumerate(output):
                 if item['source'] == level:
                     if args.lang == 'za':
-                        item['gold'] = item['gold'].replace("’", "'").replace("‘", "'")
-                        item['pred'] = item['pred'].replace("’", "'").replace("‘", "'")
+                        item['gold'] = item['gold'].replace("'", "'").replace("'", "'")
+                        item['pred'] = item['pred'].replace("'", "'").replace("'", "'")
                     refs.append(item['gold'])
                     preds.append(item['pred'])
             refs = [refs]

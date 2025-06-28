@@ -10,8 +10,9 @@ from corpus import ParallelCorpus
 from model import get_pred_from_api
 from tokenizer import *
 from prompt import *
-from grammar import GrammarBook  # <-- 1. 导入新的 GrammarBook 类
+from grammar import GrammarBook  # <-- 1. Import new GrammarBook class
 from prompt import construct_prompt_za2zh
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('--dict_path', type=str, default='./data/dictionary_za2zh.jsonl')
     parser.add_argument('--corpus_path', type=str, default='./data/parallel_corpus.json')
     parser.add_argument('--test_data_path', type=str, default='./data/test_data.json')
-    # --- 2. 新增 grammar_book_path 参数 ---
+    # --- 2. Add grammar_book_path parameter ---
     parser.add_argument('--grammar_book_path', type=str, default='./data/grammar_book.json',
                         help="Path to the grammar book.")
 
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     dictionary = WordDictionary(args.src_lang, args.tgt_lang, args.dict_path)
     print("Loading parallel corpus...")
     parallel_corpus = ParallelCorpus(args.src_lang, args.tgt_lang, args.corpus_path)
-    # --- 3. 加载语法书 ---
+    # --- 3. Load grammar book ---
     grammar_book = GrammarBook(args.grammar_book_path)
     print("Loading test data...")
     test_data = json.load(open(args.test_data_path, "r"))
@@ -61,7 +62,7 @@ if __name__ == "__main__":
 
     # Output path setup
     if args.output_path is None:
-        # 在文件名中加入 "_with_grammar" 以作区分
+        # Add "_with_grammar" in filename for distinction
         args.output_path = "./output/api_pred_{}_parallel_{}_with_grammar.jsonl".format(args.prompt_type,
                                                                                         args.num_parallel_sent)
 
@@ -69,19 +70,19 @@ if __name__ == "__main__":
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
 
     print("Detailed log will be saved to: {}".format(args.output_path))
-    fout_log = open(args.output_path, "w")
+    log_file = open(args.output_path, "w")
 
     submission_results = []
 
-    # Do test
+    # Run test
     for item in tqdm(test_data, desc="Translating sentences"):
         src_sentence = item[args.src_lang]
 
-        # --- 4. 更新函数调用，传入 grammar_book ---
+        # --- 4. Update function call, pass grammar_book ---
         prompt = prompt_func(src_sentence, dictionary, parallel_corpus, grammar_book, args)
         pred = get_pred_from_api(prompt)
 
-        # 写入日志文件
+        # Write to log file
         log_entry = {
             "query": src_sentence,
             "pred": pred,
@@ -89,14 +90,14 @@ if __name__ == "__main__":
             "prompt": prompt,
             "source": item.get('source', 'unknown')
         }
-        fout_log.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+        log_file.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
 
         submission_results.append({'id': item['id'], 'translation': pred})
 
-    fout_log.close()
+    log_file.close()
     print("Detailed log saved to {}".format(args.output_path))
 
-    # 写入CSV文件
+    # Write CSV file
     print("Writing submission file to {}...".format(args.submission_path))
     with open(args.submission_path, 'w', newline='', encoding='utf-8') as f_csv:
         writer = csv.DictWriter(f_csv, fieldnames=['id', 'translation'])

@@ -29,7 +29,7 @@ class ParallelCorpus():
         return self.corpus[idx]
     
     def load_corpus(self):
-        # load corpus
+        # Load corpus
         self.corpus = []
         if self.corpus_path.endswith('.json'):
             self.corpus = json.load(open(self.corpus_path, 'r'))
@@ -79,7 +79,7 @@ class ParallelCorpus():
             self.tgt_lang: {},
         }
         for i, item in enumerate(self.corpus):
-            # tokenize src
+            # Tokenize source
             if self.src_lang == 'zh':
                 src_tokens = lang2tokenizer[self.src_lang].tokenize(item[self.src_lang], remove_punc=True, cut_for_search=True)
             else:
@@ -90,7 +90,7 @@ class ParallelCorpus():
                     self.reversed_index[self.src_lang][token] = []
                 self.reversed_index[self.src_lang][token].append(i)
 
-            # tokenize tgt
+            # Tokenize target
             if self.tgt_lang == 'zh':
                 tgt_tokens = lang2tokenizer[self.tgt_lang].tokenize(item[self.tgt_lang], remove_punc=True, cut_for_search=True)
             else:
@@ -109,14 +109,14 @@ class ParallelCorpus():
             query_lang = self.tgt_lang
 
         
-        # tokenize
+        # Tokenize
         if query_lang == 'zh':
             query = lang2tokenizer[query_lang].tokenize(text, remove_punc=True, cut_for_search=True)
         else:
             query = lang2tokenizer[query_lang].tokenize(text, remove_punc=True)
         # print("query:", query)
 
-        # search
+        # Search
         doc_scores = self.bm25[query_lang].get_scores(query)
         top_k_idx = sorted(range(len(doc_scores)), key=lambda i: doc_scores[i])[-top_k:]
         top_k_sentences_with_scores = [{"pair": self.corpus[i], "score": doc_scores[i]} for i in top_k_idx]

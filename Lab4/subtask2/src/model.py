@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # export API_KEY='sk-your-key-here'
 
     print("Testing the API call function...")
-    test_prompt = "请将下面的壮语句子翻译成汉语：Gou dwg Vangz Gangh.\n## 在上面的句子中，壮语词语“gou”在汉语中可能的翻译是“我”；\n壮语词语“dwg”在汉语中可能的翻译是“是”；\n壮语词语“vangz”在汉语中可能的翻译是“王”；\n壮语词语“gangh”在汉语中可能的翻译是“刚”；\n## 所以，该壮语句子完整的汉语翻译是："
+    test_prompt = "Please translate the following Zhuang sentence into Chinese: Gou dwg Vangz Gangh.\n## In the above sentence, the Zhuang word \"gou\" may translate to \"我\" in Chinese;\nthe Zhuang word \"dwg\" may translate to \"是\" in Chinese;\nthe Zhuang word \"vangz\" may translate to \"王\" in Chinese;\nthe Zhuang word \"gangh\" may translate to \"刚\" in Chinese;\n## Therefore, the complete Chinese translation of this Zhuang sentence is:"
 
     try:
         translation = get_pred_from_api(test_prompt)

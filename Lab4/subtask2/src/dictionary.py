@@ -7,10 +7,10 @@ class WordDictionary():
         self.src_lang = src_lang
         self.tgt_lang = tgt_lang
         self.dict_path = dict_path
-        self.load_dict()
+        self.load_dictionary()
     
-    def load_dict(self):
-        # load dictionary
+    def load_dictionary(self):
+        # Load dictionary
         self.word_dict = {}
         self.word_to_source = {}
         with open(self.dict_path, 'r') as f:
@@ -21,7 +21,7 @@ class WordDictionary():
                 self.word_dict[src_word] = tgt_meanings
                 self.word_to_source[src_word] = json_obj['source']
 
-        # choices for fuzzy matching
+        # Choices for fuzzy matching
         self.choices = list(self.word_dict.keys())
     
     def get_source(self, word):
@@ -41,7 +41,7 @@ class WordDictionary():
         
     
     def get_meanings_by_fuzzy_match(self, word, top_k=10, max_num_meanings_per_word=None):
-        # rules for special languages
+        # Rules for special languages
         if self.src_lang == 'za':
             current_choices = [_ for _ in self.choices if len(_) >= 3]
         else:
@@ -50,7 +50,7 @@ class WordDictionary():
         output = []
 
 
-        # first: Forward Maximum Matching
+        # First: Forward Maximum Matching
         for i in range(len(word), 0, -1):
             if word[:i] in current_choices:
                 if max_num_meanings_per_word is None:
@@ -69,7 +69,7 @@ class WordDictionary():
                     })
                 break
 
-        # second: Backward Maximum Matching
+        # Second: Backward Maximum Matching
         for i in range(len(word), 0, -1):
             if word[-i:] in current_choices:
                 if word[-i:] in [_["word"] for _ in output]:
@@ -90,7 +90,7 @@ class WordDictionary():
                     })
                 break
 
-        # third: Fuzzy Matching with WRatio
+        # Third: Fuzzy Matching with WRatio
         fuzzy_match_results = process.extract(word, current_choices, scorer=fuzz.WRatio, limit=top_k)
         
         for match in fuzzy_match_results:

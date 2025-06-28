@@ -9,24 +9,24 @@ class Tokenizer():
     def tokenize(self, text, remove_punc=False):
         text = text.lower()    
         if remove_punc:
-            # 去除中文标点符号
-            for punc in "，。、；！？「」『』【】（）《》“”…":
+            # Remove Chinese punctuation marks
+            for punc in "，。、；！？「」『』【】（）《》""…":
                 text = text.replace(punc, " ")
-            # 去除英文标点符号
+            # Remove English punctuation marks
             for punc in ",.;?!":
                 text = text.replace(punc, " ")
-            # 去掉数字
+            # Remove numbers
             text = re.sub(r'\d+', '', text)
         else:
-            for punc in "，。、；！？「」『』【】（）《》“”…":
+            for punc in "，。、；！？「」『』【】（）《》""…":
                 text = text.replace(punc, " " + punc + " ")
             for punc in ",.;?!":
                 text = text.replace(punc, " " + punc + " ")
-        # 替换单引号
-        text = text.replace("‘", "'").replace("’", "'")
-        # 按空格分词
+        # Replace single quotes
+        text = text.replace("'", "'").replace("'", "'")
+        # Split by spaces
         tokenized_text = text.split(" ")
-        # 去除空格
+        # Remove empty strings
         tokenized_text = [word.strip() for word in tokenized_text if word.strip() != ""]
         return tokenized_text
 
@@ -46,25 +46,25 @@ class ZaTokenizer(Tokenizer):
     def tokenize(self, text, remove_punc=False):
         text = text.lower()    
         if remove_punc:
-            # 去除中文标点符号
-            for punc in "，。、；！？「」『』【】（）《》“”…":
+            # Remove Chinese punctuation marks
+            for punc in "，。、；！？「」『』【】（）《》""…":
                 text = text.replace(punc, " ")
-            # 去除英文标点符号
+            # Remove English punctuation marks
             for punc in ",.;?!":
                 text = text.replace(punc, " ")
-            # 去掉数字
+            # Remove numbers
             text = re.sub(r'\d+', '', text)
         else:
-            for punc in "，。、；！？「」『』【】（）《》“”…":
+            for punc in "，。、；！？「」『』【】（）《》""…":
                 text = text.replace(punc, " " + punc + " ")
-            # 去除英文标点符号
+            # Remove English punctuation marks
             for punc in ",.;?!":
                 text = text.replace(punc, " " + punc + " ")
-        # 替换单引号
-        text = text.replace("‘", "'").replace("’", "'")
-        # 按空格分词
+        # Replace single quotes
+        text = text.replace("'", "'").replace("'", "'")
+        # Split by spaces
         tokenized_text = text.split(" ")
-        # 去除空格
+        # Remove empty strings
         tokenized_text = [word.strip() for word in tokenized_text if word.strip() != ""]
         return tokenized_text
 
@@ -74,13 +74,13 @@ class ZhTokenizer(Tokenizer):
         super().__init__()
 
     def tokenize(self, text, remove_punc=False, do_cut_all=False, cut_for_search=False):
-        # 使用jieba分词
+        # Use jieba for Chinese word segmentation
         text = text.lower()
         if remove_punc:
-            # 去除中文标点符号
-            for punc in "，。、；！？「」『』【】（）《》“”…":
+            # Remove Chinese punctuation marks
+            for punc in "，。、；！？「」『』【】（）《》""…":
                 text = text.replace(punc, "")
-            # 去掉数字
+            # Remove numbers
             text = re.sub(r'\d+', '', text)
         
         if cut_for_search:
